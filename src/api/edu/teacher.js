@@ -1,7 +1,7 @@
 //讲师管理api
 import request from '@/utils/request'
 export default{
-    // 获取讲师列表
+    // 获取讲师列表 （条件查询）
     getTeacherList(current,limit,teacherQuery){
         return request({
             url: `/edu/teacher/pageTeacher/${current}/${limit}`,
@@ -37,6 +37,12 @@ export default{
             url: `/edu/teacher/updateTeacher`,
             method: 'post',
             data: teacher //把对象转换成json数据传递
+          })
+    },
+    getAllTeacher(){
+        return request({
+            url: `/edu/teacher/list`,
+            method: 'get',
           })
     }
 }

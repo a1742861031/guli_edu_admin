@@ -51,7 +51,10 @@
   import ImageCropper from '@/components/ImageCropper'
   import PanThumb from '@/components/PanThumb'
   export default {
-    components: { ImageCropper, PanThumb },
+    components: {
+      ImageCropper,
+      PanThumb
+    },
     data() {
       return {
         min: 0, //设置排序的最小值
