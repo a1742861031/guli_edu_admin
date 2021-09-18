@@ -2,12 +2,15 @@
 
   <div class="app-container">
 
-    <h2 style="text-align: center;">发布新课程</h2>
+    <h2 v-if="isUpdate" style="text-align: center;">修改课程</h2>
+    <h2 v-else-if="!isUpdate" style="text-align: center;">添加新课程</h2>
 
     <el-steps :active="1" process-status="wait" align-center style="margin-bottom: 40px;">
-      <el-step title="填写课程基本信息" />
+      <el-step v-if="isUpdate" title="修改课程基本信息" />
+      <el-step v-else-if="!isUpdate" title="填写课程基本信息" />
       <el-step title="创建课程大纲" />
-      <el-step title="提交审核" />
+      <el-step title="课程最终发布" />
+
     </el-steps>
 
     <el-form label-width="120px">
@@ -89,13 +92,26 @@
         },
         subjectNestedList: [], //一级分类列表
         subSubjectList: [], //二级分类列表
-        BASE_API: process.env.BASE_API // 接口API地址
+        BASE_API: process.env.BASE_API, // 接口API地址
+        courseId: '',
+        isUpdate: false
       }
+    },
+    mounted() {
+
     },
 
     created() {
-      this.getAllTeacher();
-      this.getOneSubject();
+      if (this.$route.params && this.$route.params.id) {
+        this.courseId = this.$route.params.id
+        this.getAllTeacher();
+        console.log(this.teacherList);
+        this.getCourseInfo();
+        this.isUpdate = true;
+      } else {
+        this.getAllTeacher();
+        this.getOneSubject();
+      }
     },
 
     methods: {
@@ -111,6 +127,20 @@
           this.subjectNestedList = res.data.tree;
         })
       },
+      //根据id查询课程信息
+      getCourseInfo() {
+        course.getCourseInfo(this.courseId).then(res => {
+          this.courseInfo = res.data.courseInfoVo;
+          subject.getTree().then(res => {
+            this.subjectNestedList = res.data.tree;
+            this.subjectNestedList.find((item) => {
+              if (item.id == this.courseInfo.subjectParentId) {
+                this.subSubjectList = item.children;
+              }
+            })
+          })
+        })
+      },
       getSubSubjectList(value) {
         this.courseInfo.subjectId = ''
         this.subjectNestedList.find((item) => {
@@ -120,17 +150,24 @@
         })
       },
       next() {
-        course.addCourse(this.courseInfo).then(res => {
-          this.$message.success("提交课程信息成功");
-          this.$router.push({
-            path: `/course/chapter/${res.data.courseId}`
+        if (!this.isUpdate) {
+          course.addCourse(this.courseInfo).then(res => {
+            this.$message.success("提交课程信息成功");
+            this.$router.push({
+              path: `/course/chapter/${res.data.courseId}`
+            })
           })
-        })
-
+        } else {
+          course.updateCourseInfo(this.courseInfo).then(res => {
+            this.$router.push({
+              path: `/course/chapter/${this.courseId}`
+            })
+          });
+        }
       },
       //上传成功回调函数
       handleAvatarSuccess(res, file) {
-        this.courseInfo.cover = res.data.url
+        this.courseInfo.cover = res.data.avatarUrl;
       },
       //上传之前验证
       beforeAvatarUpload(file) {
